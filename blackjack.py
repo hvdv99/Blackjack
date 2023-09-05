@@ -13,7 +13,6 @@ def renew_deck():
 card_names, cards_imgs, card_values = renew_deck()
 
 def draw_card():
-    global card_names, cards_imgs, card_values
     some_card_name = str(random.sample(card_names, 1)[0])
     some_card = cards_imgs[some_card_name]
     card_names.remove(some_card_name)
@@ -24,39 +23,32 @@ def start_game():
     dealer_cards = dealer_frm.grid_slaves(row=0, column=1)[0].grid_slaves(row=0)
     player_cards = player_frm.grid_slaves(row=0, column=1)[0].grid_slaves(row=0)
 
-    # reset hands if there are cards in them
+    # reset hands and scores if there are cards in them
     for hand in [dealer_cards, player_cards]:
       for card in hand:
           if card.cget("image"):
             card.configure(image="")
             card.image = ""
 
+    # set the hand values to 0
     for i in range(2):
-        hand_values[i] = 0
+        hand_values['ace1'][i] = 0
+        hand_values['ace11'][i] = 0
 
     # renew deck
     global card_names, cards_imgs, card_values
     card_names, cards_imgs, card_values = renew_deck()
 
     # dealer gets one card
-    image, card_name = draw_card()
-    card_value = card_values[card_name]
-    dealer_cards[0].configure(image=image)
-    dealer_cards[0].image = image
+    dealer_hit()
 
-    # update value of dealer's hand
-    hand_values[0] += card_value
-    dealer_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Dealer: {str(hand_values[0])}')
+    dealer_frm.grid_slaves(row=0, column=0)[0].configure(text=f"Dealer: {str(hand_values['ace11'][0])}")
 
     # player gets two cards
-    for i in range(2):
-      image, card_name = draw_card()
-      player_cards[i].configure(image=image)
-      player_cards[i].image = image
+    for _ in range(2):
+        player_hit()
 
-      # update value of player's hand
-      hand_values[1] += card_values[card_name]
-    player_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Player: {str(hand_values[1])}')
+    player_frm.grid_slaves(row=0, column=0)[0].configure(text=f"Player: {str(hand_values['ace11'][1])}")
 
     # now we just need the hit, stand and quit buttons
     buttons = button_area.pack_slaves()
@@ -82,13 +74,22 @@ def player_hit():
             break
 
     # update value of player's hand
-    hand_values[1] += card_values[card_name]
-    player_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Player: {str(hand_values[1])}')
+    hand_values['ace11'][1] += card_values[card_name]
+    if card_name[0] == 'A':
+        hand_values['ace1'][1] += 1
+    else:
+        hand_values['ace1'][1] += card_values[card_name]
+
+    # when the player goes bust because his hand value > 21 and there is an ace in his hand,
+    # we switch the value of his hand to that when the ace is counted as 1.
+    if hand_values['ace11'][1] > 21 and hand_values['ace1'][1] <= 21:
+        hand_values['ace11'][1] = hand_values['ace1'][1]
+    player_frm.grid_slaves(row=0, column=0)[0].configure(text=f"Player: {str(hand_values['ace11'][1])}")
 
     # check if player busted
-    if hand_values[1] > 21:
-        player_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Player: {str(hand_values[1])} BUSTED!')
-        dealer_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Dealer: {str(hand_values[0])} WINNER!')
+    if hand_values['ace11'][1] > 21:
+        player_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Player: {str(hand_values["ace11"][1])} BUSTED!')
+        dealer_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Dealer: {str(hand_values["ace11"][0])} WINNER!')
         reset_btn_frame()
 
 def dealer_hit():
@@ -103,31 +104,40 @@ def dealer_hit():
             break
 
     #update value of dealer's hand
-    hand_values[0] += card_values[card_name]
-    dealer_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Dealer: {str(hand_values[0])}')
+    hand_values['ace11'][0] += card_values[card_name]
+    if card_name[0] == 'A':
+        hand_values['ace1'][0] += 1
+    else:
+        hand_values['ace1'][0] += card_values[card_name]
+
+    # when the dealer goes bust because he has an ace in his hand, we set the value of his hand to that when the ace is
+    # counted as 1.
+    if hand_values['ace11'][0] > 21 and hand_values['ace1'][0] <= 21:
+        hand_values['ace11'][0] = hand_values['ace1'][0]
+    dealer_frm.grid_slaves(row=0, column=0)[0].configure(text=f"Dealer: {str(hand_values['ace11'][0])}")
 
 def stand():
-    while hand_values[0] < 17:
+    while hand_values['ace11'][0] < 17:
         dealer_hit()
         # check if dealer busted
-        if hand_values[0] > 21:
-            dealer_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Dealer: {str(hand_values[0])} BUSTED!')
-            player_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Player: {str(hand_values[1])} WINNER!')
+        if hand_values["ace11"][0] > 21:
+            dealer_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Dealer: {str(hand_values["ace11"][0])} BUSTED!')
+            player_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Player: {str(hand_values["ace11"][1])} WINNER!')
             reset_btn_frame()
-            return
+            return # return statement because we want the function to end when dealer busted.
 
     # check who won
     # check if it is a tie
-    if hand_values[0] == hand_values[1]:
-        dealer_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Dealer: {str(hand_values[0])} TIE!')
-        player_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Player: {str(hand_values[1])} TIE!')
+    if hand_values["ace11"][0] == hand_values["ace11"][1]:
+        dealer_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Dealer: {str(hand_values["ace11"][0])} TIE!')
+        player_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Player: {str(hand_values["ace11"][1])} TIE!')
     # check if dealer won
-    elif hand_values[0] > hand_values[1]:
-        dealer_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Dealer: {str(hand_values[0])} WINNER!')
-        player_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Player: {str(hand_values[1])} LOSER!')
+    elif hand_values["ace11"][0] > hand_values["ace11"][1]:
+        dealer_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Dealer: {str(hand_values["ace11"][0])} WINNER!')
+        player_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Player: {str(hand_values["ace11"][1])} LOSER!')
     else:
-        dealer_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Dealer: {str(hand_values[0])} LOSER!')
-        player_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Player: {str(hand_values[1])} WINNER!')
+        dealer_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Dealer: {str(hand_values["ace11"][0])} LOSER!')
+        player_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Player: {str(hand_values["ace11"][1])} WINNER!')
     reset_btn_frame()
 
 def reset_btn_frame():
@@ -176,9 +186,9 @@ player_frm.columnconfigure(weight=1, minsize=90, index=[0,1])
 player_frm.rowconfigure(weight=1, minsize=20, index=0)
 
 # Interactive value and card spaces
-hand_values = {0: 0, 1: 0}
+hand_values = {'ace1':{0: 0, 1: 0},'ace11':{0: 0, 1: 0}}
 for i, frm in enumerate([dealer_frm, player_frm]):
-    value_frm = tk.Label(master=frm, text=f'Value: {hand_values[i]}', fg='white', bg='green', padx=10, pady=10)
+    value_frm = tk.Label(master=frm, text=f"Value: {hand_values['ace11'][i]}", fg='white', bg='green', padx=10, pady=10)
     cards_frm = tk.Frame(master=frm, bg='green', width=800, height=200, padx=10, pady=10)
     cards_frm.rowconfigure(weight=1, minsize=100, index=0)
     for i in range(6):

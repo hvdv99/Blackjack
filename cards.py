@@ -12,6 +12,8 @@ class pngCards:
          temp = temp[:-1]
          if temp.isnumeric():
             card_values[cn] = int(temp)
+         elif temp[0] == 'A':
+            card_values[cn] = 11
          else:
             card_values[cn] = 10
 
