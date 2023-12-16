@@ -3,6 +3,7 @@ from cards import pngCards
 from PIL import ImageTk
 import random
 
+
 def renew_deck():
   cards_obj = pngCards(ndecks=2)
   card_names = cards_obj.card_names
@@ -10,7 +11,6 @@ def renew_deck():
   card_values = cards_obj.card_values
   return card_names, cards_imgs, card_values
 
-card_names, cards_imgs, card_values = renew_deck()
 
 def draw_card():
     some_card_name = str(random.sample(card_names, 1)[0])
@@ -18,6 +18,7 @@ def draw_card():
     card_names.remove(some_card_name)
     del cards_imgs[some_card_name]
     return ImageTk.PhotoImage(some_card), some_card_name
+
 
 def start_game():
     dealer_cards = dealer_frm.grid_slaves(row=0, column=1)[0].grid_slaves(row=0)
@@ -62,6 +63,7 @@ def start_game():
     quit_btn = tk.Button(button_area, text="Quit!", command=quit)
     quit_btn.pack(fill=tk.BOTH)
 
+
 def player_hit():
     new_card, card_name = draw_card()
     player_cards = player_frm.grid_slaves(row=0, column=1)[0].grid_slaves(row=0)
@@ -92,6 +94,7 @@ def player_hit():
         dealer_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Dealer: {str(hand_values["ace11"][0])} WINNER!')
         reset_btn_frame()
 
+
 def dealer_hit():
     new_card, card_name = draw_card()
     dealer_cards = dealer_frm.grid_slaves(row=0, column=1)[0].grid_slaves(row=0)
@@ -114,7 +117,10 @@ def dealer_hit():
     # counted as 1.
     if hand_values['ace11'][0] > 21 and hand_values['ace1'][0] <= 21:
         hand_values['ace11'][0] = hand_values['ace1'][0]
-    dealer_frm.grid_slaves(row=0, column=0)[0].configure(text=f"Dealer: {str(hand_values['ace11'][0])}")
+    (dealer_frm
+     .grid_slaves(row=0, column=0)[0]
+     .configure(text=f"Dealer: {str(hand_values['ace11'][0])}"))
+
 
 def stand():
     while hand_values['ace11'][0] < 17:
@@ -124,21 +130,32 @@ def stand():
             dealer_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Dealer: {str(hand_values["ace11"][0])} BUSTED!')
             player_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Player: {str(hand_values["ace11"][1])} WINNER!')
             reset_btn_frame()
-            return # return statement because we want the function to end when dealer busted.
+            return  # return statement because we want the function to end when dealer busted.
 
     # check who won
     # check if it is a tie
     if hand_values["ace11"][0] == hand_values["ace11"][1]:
-        dealer_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Dealer: {str(hand_values["ace11"][0])} TIE!')
-        player_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Player: {str(hand_values["ace11"][1])} TIE!')
+        (dealer_frm
+         .grid_slaves(row=0, column=0)[0]
+         .configure(text=f'Dealer: {str(hand_values["ace11"][0])} TIE!'))
+        (player_frm
+         .grid_slaves(row=0, column=0)[0]
+         .configure(text=f'Player: {str(hand_values["ace11"][1])} TIE!'))
     # check if dealer won
     elif hand_values["ace11"][0] > hand_values["ace11"][1]:
-        dealer_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Dealer: {str(hand_values["ace11"][0])} WINNER!')
-        player_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Player: {str(hand_values["ace11"][1])} LOSER!')
+        (dealer_frm
+         .grid_slaves(row=0, column=0)[0]
+         .configure(text=f'Dealer: {str(hand_values["ace11"][0])} WINNER!'))
+        (player_frm
+         .grid_slaves(row=0, column=0)[0]
+         .configure(text=f'Player: {str(hand_values["ace11"][1])} LOSER!'))
     else:
-        dealer_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Dealer: {str(hand_values["ace11"][0])} LOSER!')
-        player_frm.grid_slaves(row=0, column=0)[0].configure(text=f'Player: {str(hand_values["ace11"][1])} WINNER!')
+        (dealer_frm
+         .grid_slaves(row=0, column=0)[0].configure(text=f'Dealer: {str(hand_values["ace11"][0])} LOSER!'))
+        (player_frm
+         .grid_slaves(row=0, column=0)[0].configure(text=f'Player: {str(hand_values["ace11"][1])} WINNER!'))
     reset_btn_frame()
+
 
 def reset_btn_frame():
     btn_widgets = button_area.pack_slaves()
@@ -146,10 +163,15 @@ def reset_btn_frame():
             btn.pack_forget()
 
     # now we just need the start button and the quit button
-    start_btn = tk.Button(master=button_area, bg='green', text='Start Game!', relief=tk.SUNKEN, border=1, command=start_game)
-    quit_btn = tk.Button(master=button_area, bg='green', text='Quit!', relief=tk.SUNKEN, border=1, command=root.destroy)
+    start_btn = tk.Button(master=button_area, bg='green', text='Start Game!',
+                          relief=tk.SUNKEN, border=1, command=start_game)
+    quit_btn = tk.Button(master=button_area, bg='green', text='Quit!',
+                         relief=tk.SUNKEN, border=1, command=root.destroy)
     start_btn.pack(fill=tk.BOTH)
     quit_btn.pack(fill=tk.BOTH)
+
+
+card_names, cards_imgs, card_values = renew_deck()
 
 root = tk.Tk()
 root.title('Blackjack')

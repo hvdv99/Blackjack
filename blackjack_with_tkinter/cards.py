@@ -4,7 +4,7 @@ import random
 
 class pngCards:
     def __init__(self, ndecks=1):
-      PATH = './cards'
+      PATH = 'cards'
       card_names = [f for f in list(os.listdir(PATH)) if f.endswith('.png')]
       card_values = {}
       for cn in card_names.copy():
